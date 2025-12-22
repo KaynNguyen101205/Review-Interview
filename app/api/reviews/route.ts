@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { reviewSubmissionRateLimiter } from "@/lib/ratelimit"
+import { rateLimitMiddleware } from "@/lib/rate-limit-middleware"
 
 // Force dynamic rendering since we use headers (via getCurrentUser) and searchParams
 export const dynamic = "force-dynamic"
@@ -153,6 +155,16 @@ export async function POST(request: NextRequest) {
         { error: "Unauthorized" },
         { status: 401 }
       )
+    }
+
+    // Apply rate limiting for review submissions
+    const rateLimitResponse = await rateLimitMiddleware(
+      request,
+      reviewSubmissionRateLimiter,
+      (user as any).id
+    )
+    if (rateLimitResponse) {
+      return rateLimitResponse
     }
 
     const body = await request.json()
