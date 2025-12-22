@@ -30,6 +30,9 @@ jobs:
 
       - name: Validate Prisma schema
         run: npx prisma validate
+        env:
+          # Use your Neon database URL from GitHub secrets
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Build
         run: npm run build
