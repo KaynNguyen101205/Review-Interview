@@ -7,21 +7,6 @@ const nextConfig = {
     domains: [],
     remotePatterns: [],
   },
-  // Enable Sentry in production only
-  sentry: {
-    // Use `hidden-source-map` in production to avoid exposing source maps
-    hideSourceMaps: true,
-    // Automatically instrument API routes
-    widenClientFileUpload: true,
-    // Transpile SDK to be compatible with IE11
-    transpileClientSDK: true,
-    // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
-    tunnelRoute: "/monitoring",
-    // Hides source maps from generated client bundles
-    hideSourceMaps: true,
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
-  },
 }
 
 module.exports = withSentryConfig(nextConfig, {
@@ -48,13 +33,17 @@ module.exports = withSentryConfig(nextConfig, {
   // Hides source maps from generated client bundles
   hideSourceMaps: true,
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors.
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#vercel-cron-monitor-support
-  automaticVercelMonitors: true,
+  // Webpack configuration options
+  webpack: {
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    treeshake: {
+      removeDebugLogging: true,
+    },
+    // Enables automatic instrumentation of Vercel Cron Monitors.
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#vercel-cron-monitor-support
+    automaticVercelMonitors: true,
+  },
 })
 
