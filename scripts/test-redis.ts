@@ -1,6 +1,12 @@
 // Test Redis connection
 // Run with: npx tsx scripts/test-redis.ts
 
+// IMPORTANT: Load environment variables BEFORE importing redis
+import { config } from "dotenv"
+import { resolve } from "path"
+config({ path: resolve(process.cwd(), ".env") })
+
+// Now import Redis - env vars should be loaded
 import { redis, isRedisConfigured } from "../lib/redis"
 import { Cache } from "../lib/cache"
 
