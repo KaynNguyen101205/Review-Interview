@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+// Force dynamic rendering since we use headers and searchParams
+export const dynamic = "force-dynamic"
+
 const companyRequestSchema = z.object({
   requestedName: z.string().min(1, "Company name is required"),
   website: z.string().url().optional().or(z.literal("")),

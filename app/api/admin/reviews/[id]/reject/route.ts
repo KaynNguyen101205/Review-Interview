@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+// Force dynamic rendering since we use headers (via getCurrentUser)
+export const dynamic = "force-dynamic"
+
 const rejectSchema = z.object({
   reason: z.string().min(1, "Rejection reason is required"),
 })

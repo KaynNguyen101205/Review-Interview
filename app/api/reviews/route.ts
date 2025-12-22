@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+// Force dynamic rendering since we use headers (via getCurrentUser)
+export const dynamic = "force-dynamic"
+
 const reviewSchema = z.object({
   companyId: z.string().min(1),
   roleTitle: z.string().min(1),

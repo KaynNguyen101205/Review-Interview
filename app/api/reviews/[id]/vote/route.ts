@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+// Force dynamic rendering since we use headers (via getCurrentUser)
+export const dynamic = "force-dynamic"
+
 const voteSchema = z.object({
   value: z.enum(["UP", "DOWN"]),
 })

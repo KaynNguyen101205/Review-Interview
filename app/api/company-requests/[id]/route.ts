@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
+// Force dynamic rendering since we use headers (via getCurrentUser)
+export const dynamic = "force-dynamic"
+
 const updateRequestSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED"]),
   rejectionReason: z.string().optional(),
