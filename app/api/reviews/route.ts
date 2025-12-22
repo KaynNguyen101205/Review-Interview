@@ -3,8 +3,124 @@ import { getCurrentUser } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
-// Force dynamic rendering since we use headers (via getCurrentUser)
+// Force dynamic rendering since we use headers (via getCurrentUser) and searchParams
 export const dynamic = "force-dynamic"
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const companySlug = searchParams.get("companySlug") || ""
+    const role = searchParams.get("role") || ""
+    const season = searchParams.get("season") || ""
+    const year = searchParams.get("year") || ""
+    const location = searchParams.get("location") || ""
+    const sort = searchParams.get("sort") || "newest"
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "20")
+    const skip = (page - 1) * limit
+
+    const where: any = {
+      status: "APPROVED", // Only show approved reviews
+    }
+
+    // Filter by company slug
+    if (companySlug) {
+      const company = await prisma.company.findUnique({
+        where: { slug: companySlug },
+        select: { id: true },
+      })
+      if (company) {
+        where.companyId = company.id
+      } else {
+        // Company not found, return empty results
+        return NextResponse.json({
+          reviews: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        })
+      }
+    }
+
+    // Filter by role title
+    if (role) {
+      where.roleTitle = { contains: role, mode: "insensitive" }
+    }
+
+    // Filter by season
+    if (season) {
+      where.season = season
+    }
+
+    // Filter by year
+    if (year) {
+      where.year = parseInt(year)
+    }
+
+    // Filter by location
+    if (location) {
+      where.location = { contains: location, mode: "insensitive" }
+    }
+
+    // Determine sort order
+    const orderBy: any =
+      sort === "helpful"
+        ? { helpfulScore: "desc" }
+        : { publishedAt: "desc" }
+
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              school: true,
+            },
+          },
+          votes: {
+            where: { value: "UP" },
+            select: {
+              id: true,
+              value: true,
+            },
+          },
+        },
+      }),
+      prisma.review.count({ where }),
+    ])
+
+    return NextResponse.json({
+      reviews,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    console.error("Error fetching reviews:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch reviews" },
+      { status: 500 }
+    )
+  }
+}
 
 const reviewSchema = z.object({
   companyId: z.string().min(1),

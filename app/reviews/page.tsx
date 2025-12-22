@@ -27,6 +27,16 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
     `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/reviews?${params}`,
     { cache: "no-store" }
   )
+
+  if (!response.ok) {
+    console.error("Failed to fetch reviews:", response.status, response.statusText)
+    return (
+      <div>
+        <p className="text-destructive">Failed to load reviews. Please try again later.</p>
+      </div>
+    )
+  }
+
   const data = await response.json()
 
   return (
