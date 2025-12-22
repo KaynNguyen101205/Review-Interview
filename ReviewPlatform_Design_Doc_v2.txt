@@ -1,0 +1,234 @@
+REVIEW PLATFORM DESIGN DOCUMENT
+Version: v2
+
+0. Summary
+Build a web platform where students can browse companies and read/write internship reviews (application + interview process).
+Core flows include browse/search, company pages, reviews, submit review with moderation, request new company, admin moderation,
+helpful votes, and reports.
+
+Quick Overview
+- Summary: A web platform for students to browse companies and read and write internship reviews with moderation, helpful votes, and reporting.
+- Primary users: Visitors (browse), Users (submit/vote/report), Admins (moderate/manage).
+- Core flows: Browse/search -> company pages -> reviews; submit review -> pending -> admin approve/reject; request company -> admin approve -> company created.
+
+1. Goals and Non-Goals
+Goals (MVP)
+- Public directory of companies and company detail pages
+- Review listing with filters and sorting
+- Submit review (auth-gated) -> moderation queue (pending -> approved/rejected)
+- Request new company form -> admin approval creates company
+- Helpful votes and report review
+- Admin dashboard (minimal)
+
+Non-Goals (MVP)
+- Real-time chat, messaging, DMs
+- Complex recommendation engine
+- Payments/subscriptions
+- Full ATS (application tracking system) features
+
+2. User Stories
+Public
+- As a visitor, I can search companies by name and browse by filters (industry, location).
+- As a visitor, I can open a company page and read reviews.
+
+User
+- As a user, I can sign in via Google (or email/password).
+- As a user, I can submit a review with role/season/year and narrative details.
+- As a user, I can see pending/approved/rejected status of my submissions.
+- As a user, I can upvote a review as helpful and report problematic content.
+
+Admin
+- As an admin, I can approve/reject reviews and provide a rejection reason.
+- As an admin, I can dismiss/action reports.
+- As an admin, I can approve company requests and create a company record.
+
+3. Product Requirements
+3.1 Core Entities
+- Company
+- Review
+- User
+- CompanyRequest
+- ReviewVote (helpful)
+- ReviewReport
+- Tag (optional)
+
+3.2 Search and Filtering
+- Company: name (prefix/contains), industry, location
+- Review: company, roleTitle, season, year, location, difficulty, outcome
+- Sorting: newest, most helpful, optionally trending
+
+3.3 Moderation
+- Reviews default to PENDING.
+- Admin can set APPROVED, REJECTED, REMOVED, NEEDS_EDIT.
+- Reports tracked separately; actions can update review status and notify the user.
+
+4. System Architecture
+Recommended baseline: Next.js app serving UI and API routes in one repo, Prisma for data access, Postgres as the primary database.
+Admins are protected by role-based checks. Optional caching and search can be added later.
+
+5. Data Model
+Use Prisma models for User, Company, Review, ReviewVote, ReviewReport, CompanyRequest, and optional Tag join tables.
+Key constraints include unique company slug and one vote per user per review.
+
+Key constraints
+- Company.slug unique
+- ReviewVote unique (reviewId, userId)
+- Cascade deletes: Company -> Reviews; Review -> Votes/Reports
+- Account-only reviews: make Review.userId required (otherwise keep optional for anonymous)
+
+6. API Design (REST baseline)
+Companies
+- GET /api/companies?query=&industry=&location=&page=
+- GET /api/companies/:slug
+- POST /api/companies (admin)
+- PATCH /api/companies/:id (admin)
+
+Reviews
+- GET /api/reviews?companySlug=&role=&season=&year=&location=&sort=
+- GET /api/reviews/:id
+- POST /api/reviews (auth; creates PENDING)
+- PATCH /api/reviews/:id (owner if pending/needs_edit; admin anytime)
+- DELETE /api/reviews/:id (owner soft-delete or admin remove)
+
+Votes
+- POST /api/reviews/:id/vote  body { value: UP | DOWN }
+- DELETE /api/reviews/:id/vote
+
+Reports
+- POST /api/reviews/:id/report  body { reason, details }
+
+Company Requests
+- POST /api/company-requests  body { requestedName, website, note, contactEmail }
+- GET /api/company-requests (admin)
+- PATCH /api/company-requests/:id (admin approve/reject)
+
+Admin Moderation
+- GET /api/admin/reviews?status=PENDING
+- POST /api/admin/reviews/:id/approve
+- POST /api/admin/reviews/:id/reject  body { reason }
+- GET /api/admin/reports?status=OPEN
+- POST /api/admin/reports/:id/dismiss
+- POST /api/admin/reports/:id/action  body { actionType }
+
+7. UI Routes
+Public
+- /
+- /companies
+- /companies/[slug]
+- /reviews
+- /request-company
+
+User
+- /login
+- /me
+- /me/reviews
+- /reviews/new
+- /reviews/[id]/edit
+
+Admin
+- /admin
+- /admin/reviews
+- /admin/reports
+- /admin/requests
+- /admin/companies
+
+8. Business Logic
+8.1 Review submission
+1) Check authentication
+2) Validate fields (server-side)
+3) Create Review status=PENDING
+4) Show confirmation: waiting for approval
+5) Surface in admin queue (notification optional)
+
+8.2 Approval and publishing
+1) Set status=APPROVED and publishedAt
+2) Recompute company cached stats (reviewCount, avgDifficulty, lastReviewAt)
+3) Optional: refresh cache/search index
+
+8.3 Helpful votes
+- Enforce one vote per user per review; maintain helpfulScore cache for sorting.
+
+8.4 Reporting
+- Create report status=OPEN; admins dismiss/action; can remove or flag reviews.
+
+9. Non-Functional Requirements
+Performance
+- Paginate lists; avoid loading everything
+- Denormalize company stats for fast pages
+- Add indexes for common filters (status, companyId, season/year, roleTitle)
+
+Security and abuse prevention
+- Protect admin routes with RBAC
+- Rate limit review submit, reports, company requests
+- Validate/sanitize user-generated text; render safely to prevent XSS
+- Keep audit trail of admin actions (recommended)
+
+10. Deployment, CI/CD, Observability
+CI
+- GitHub Actions: lint, typecheck, tests, build
+- Prisma validate and migration checks
+
+CD
+- Vercel deploy on main; preview deploys on PRs
+- Managed Postgres (Neon/Supabase)
+
+Observability
+- Sentry for errors
+- Structured logs
+- Basic health endpoint
+
+11. Milestones
+Milestone 1 - MVP browse
+- DB + Prisma models
+- Companies list + company page
+- Reviews explorer (read-only)
+
+Milestone 2 - Auth + submit review
+- NextAuth
+- Submit review + my reviews dashboard
+- Admin approve/reject + company stats update
+
+Milestone 3 - Trust and safety
+- Helpful votes + reports
+- Company request flow
+- Rate limiting + validation hardening
+
+Milestone 4 - Polish
+- UI polish, SEO metadata, sitemap
+- Performance tuning and analytics
+
+12. Future Enhancements
+- Full-text search (Postgres tsvector or hosted search)
+- Trending ranking (time decay + helpful score)
+- Anonymous reviews with verification (edu email)
+- Attachments with redaction workflow
+- Interview timeline with structured stages
+- Similar companies and roles recommendations
+
+13. Recommended Tech Stack (Best Speed-to-Ship)
+Frontend and Backend
+- Next.js 14/15 (App Router) + TypeScript
+- TailwindCSS + shadcn/ui
+
+Database
+- Postgres (Neon / Supabase / RDS)
+
+ORM
+- Prisma
+
+Auth
+- NextAuth (Google OAuth)
+- Or Supabase Auth if you want simpler infra
+
+Hosting
+- Vercel for web (fast deploy, preview URLs)
+- DB on Neon/Supabase (managed Postgres)
+
+DevOps add-ons (portfolio boosters)
+- GitHub Actions: lint/test/build + prisma migrate deploy on staging
+- Sentry for error tracking
+- Upstash Redis (optional) for rate limit + caching
+
+Why this stack
+You build UI and API in one repo, deploy in minutes, Prisma makes schema changes painless,
+and you can still showcase CI/CD and infrastructure choices.
