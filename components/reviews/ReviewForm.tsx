@@ -120,7 +120,7 @@ export default function ReviewForm({ companies, review }: ReviewFormProps) {
         <CardHeader>
           <CardTitle>Basic Information</CardTitle>
           <CardDescription>
-            Tell us about the position you're reviewing
+            Tell us about the position you&apos;re reviewing
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
