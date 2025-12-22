@@ -31,14 +31,13 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate
         env:
-          # Use your Neon database URL from GitHub secrets
+          # Use Neon database URL from GitHub secrets
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Build
         run: npm run build
         env:
-          # Use your Neon database URL from GitHub secrets
-          # Add DATABASE_URL secret in: Settings > Secrets and variables > Actions
+
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: test-secret-for-ci-build-only

@@ -16,23 +16,22 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        const isAuthRoute = req.nextUrl.pathname.startsWith("/login")
+        // Public routes that don't require authentication
         const isPublicRoute =
           req.nextUrl.pathname === "/" ||
+          req.nextUrl.pathname.startsWith("/login") ||
           req.nextUrl.pathname.startsWith("/companies") ||
           req.nextUrl.pathname.startsWith("/reviews") ||
           req.nextUrl.pathname.startsWith("/request-company") ||
           req.nextUrl.pathname.startsWith("/api/companies") ||
-          req.nextUrl.pathname.startsWith("/api/reviews")
-
-        if (isAuthRoute && token) {
-          return false
-        }
+          req.nextUrl.pathname.startsWith("/api/reviews") ||
+          req.nextUrl.pathname.startsWith("/api/auth")
 
         if (isPublicRoute) {
           return true
         }
 
+        // Protected routes require authentication
         return !!token
       },
     },
@@ -45,7 +44,7 @@ export const config = {
     "/me/:path*",
     "/reviews/new",
     "/reviews/:id/edit",
-    "/login",
+    // Don't include /login in matcher - it's a public route
   ],
 }
 
