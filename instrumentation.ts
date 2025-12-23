@@ -10,5 +10,8 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "edge") {
     await import("./sentry.edge.config")
   }
+  
+  // Client-side initialization is handled by instrumentation-client.ts
+  // which is automatically loaded by Next.js
 }
 

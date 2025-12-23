@@ -7,6 +7,10 @@ const nextConfig = {
     domains: [],
     remotePatterns: [],
   },
+  // Enable instrumentation hook
+  experimental: {
+    instrumentationHook: true,
+  },
 }
 
 module.exports = withSentryConfig(nextConfig, {
