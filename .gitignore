@@ -1,18 +1,11 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # Dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
 
 # Testing
 /coverage
 *.lcov
-.nyc_output
 
 # Next.js
 /.next/
@@ -40,9 +33,6 @@ next-env.d.ts
 
 # Prisma
 /prisma/migrations
-# Keep migrations folder structure but ignore migration files if needed
-# Uncomment if you want to ignore all migrations:
-# /prisma/migrations/*.sql
 
 # Sentry
 .env.sentry-build-plugin
@@ -56,9 +46,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# Debug
-*.pem
 
 # Cache
 .cache/
