@@ -30,3 +30,5 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
 } else {
   console.warn("⚠️ NEXT_PUBLIC_SENTRY_DSN not set")
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart
