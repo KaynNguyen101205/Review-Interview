@@ -3,20 +3,65 @@
 import * as Sentry from "@sentry/nextjs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
 
 export default function TestSentryPage() {
+  const [sentryStatus, setSentryStatus] = useState<string>("Checking...")
+  const [lastEventId, setLastEventId] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check if Sentry is initialized
+    const checkSentry = async () => {
+      try {
+        const result = await Sentry.diagnoseSdkConnectivity()
+        if (result === "sentry-unreachable") {
+          setSentryStatus("❌ Sentry is unreachable (check network/ad-blocker)")
+        } else {
+          setSentryStatus("✅ Sentry is connected and ready")
+        }
+      } catch (error) {
+        setSentryStatus("⚠️ Could not check Sentry connectivity")
+      }
+    }
+    checkSentry()
+  }, [])
   const testError = () => {
     try {
-      throw new Error("Test error from Sentry setup")
+      const errorMessage = `Test error from Sentry setup - ${new Date().toISOString()}`
+      throw new Error(errorMessage)
     } catch (error) {
-      Sentry.captureException(error)
-      alert("Error sent to Sentry! Check your Sentry dashboard.")
+      const eventId = Sentry.captureException(error, {
+        tags: {
+          test: "true",
+          source: "test-sentry-page",
+        },
+        extra: {
+          timestamp: new Date().toISOString(),
+        },
+      })
+      setLastEventId(eventId || null)
+      console.log("Error captured, event ID:", eventId)
+      console.log("Error details:", error)
+      alert(`Error sent to Sentry! Event ID: ${eventId || "unknown"}\n\nCheck:\n1. Browser console (F12)\n2. Network tab for Sentry requests\n3. Your Sentry dashboard`)
     }
   }
 
   const testMessage = () => {
-    Sentry.captureMessage("Test message from Sentry setup", "info")
-    alert("Message sent to Sentry! Check your Sentry dashboard.")
+    const message = `Test message from Sentry setup - ${new Date().toISOString()}`
+    const eventId = Sentry.captureMessage(message, {
+      level: "info",
+      tags: {
+        test: "true",
+        source: "test-sentry-page",
+      },
+      extra: {
+        timestamp: new Date().toISOString(),
+      },
+    })
+    setLastEventId(eventId || null)
+    console.log("Message captured, event ID:", eventId)
+    console.log("Message:", message)
+    alert(`Message sent to Sentry! Event ID: ${eventId || "unknown"}\n\nCheck:\n1. Browser console (F12)\n2. Network tab for Sentry requests\n3. Your Sentry dashboard`)
   }
 
   const testBreadcrumb = () => {
@@ -67,11 +112,31 @@ export default function TestSentryPage() {
             </p>
           </div>
 
-          <div className="mt-8 p-4 bg-muted rounded-md">
-            <p className="text-sm">
-              <strong>Note:</strong> Make sure you&apos;ve added your Sentry DSN to your{" "}
-              <code className="text-xs bg-background px-1 py-0.5 rounded">.env</code> file
-            </p>
+          <div className="mt-8 p-4 bg-muted rounded-md space-y-3">
+            <div>
+              <p className="text-sm font-semibold mb-1">Sentry Status:</p>
+              <p className="text-xs">{sentryStatus}</p>
+            </div>
+            
+            {lastEventId && (
+              <div>
+                <p className="text-sm font-semibold mb-1">Last Event ID:</p>
+                <code className="text-xs bg-background px-2 py-1 rounded block break-all">
+                  {lastEventId}
+                </code>
+              </div>
+            )}
+
+            <div>
+              <p className="text-sm font-semibold mb-1">Troubleshooting:</p>
+              <ul className="text-xs text-muted-foreground list-disc list-inside ml-2 space-y-1">
+                <li>Open browser console (F12) and look for Sentry messages</li>
+                <li>Check Network tab for requests to <code>sentry.io</code></li>
+                <li>Verify you&apos;re looking at project: <code>javascript-nextjs</code> in Sentry</li>
+                <li>Check if ad-blocker is blocking Sentry requests</li>
+                <li>Make sure DSN is set: <code>NEXT_PUBLIC_SENTRY_DSN</code> in .env</li>
+              </ul>
+            </div>
           </div>
         </CardContent>
       </Card>
