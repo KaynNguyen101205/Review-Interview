@@ -2,6 +2,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Enable static generation for homepage
+export const revalidate = 3600 // Revalidate every hour
+
 export default function Home() {
   return (
     <main className="min-h-screen p-8">

@@ -2,17 +2,34 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Enable ISR for company pages - revalidate every 5 minutes
+export const revalidate = 300
+
 async function getCompany(slug: string) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/companies/${slug}`,
-    { cache: "no-store" }
-  )
+  const { prisma } = await import("@/lib/prisma")
+  
+  const company = await prisma.company.findUnique({
+    where: { slug },
+    include: {
+      reviews: {
+        where: { status: "APPROVED" },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              school: true,
+            },
+          },
+          votes: true,
+        },
+        orderBy: { publishedAt: "desc" },
+        take: 10,
+      },
+    },
+  })
 
-  if (!response.ok) {
-    return null
-  }
-
-  return response.json()
+  return company
 }
 
 export default async function CompanyPage({

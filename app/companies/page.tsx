@@ -17,16 +17,61 @@ async function CompaniesList({ searchParams }: { searchParams: any }) {
     page,
   })
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/companies?${params}`,
-    { cache: "no-store" }
-  )
+  // Use direct database query instead of API call for better performance
+  const { prisma } = await import("@/lib/prisma")
+  
+  const query = searchParams.query || ""
+  const industry = searchParams.industry || ""
+  const location = searchParams.location || ""
+  const page = parseInt(searchParams.page || "1", 10)
+  const limit = 12
+  const skip = (page - 1) * limit
 
-  if (!response.ok) {
-    return <p className="text-muted-foreground">Failed to load companies.</p>
+  const where: any = {}
+  if (query) {
+    where.OR = [
+      { name: { contains: query, mode: "insensitive" } },
+      { description: { contains: query, mode: "insensitive" } },
+    ]
+  }
+  if (industry) {
+    where.industry = { contains: industry, mode: "insensitive" }
+  }
+  if (location) {
+    where.hqLocation = { contains: location, mode: "insensitive" }
   }
 
-  const data = await response.json()
+  const [companies, total] = await Promise.all([
+    prisma.company.findMany({
+      where,
+      include: {
+        _count: {
+          select: {
+            reviews: {
+              where: { status: "APPROVED" },
+            },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      skip,
+      take: limit,
+    }),
+    prisma.company.count({ where }),
+  ])
+
+  const data = {
+    companies: companies.map((company) => ({
+      ...company,
+      reviewCount: company._count.reviews,
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
 
   return (
     <div>
@@ -76,6 +121,10 @@ async function CompaniesList({ searchParams }: { searchParams: any }) {
     </div>
   )
 }
+
+// Enable partial prerendering for better performance
+export const dynamic = "auto"
+export const revalidate = 60
 
 export default function CompaniesPage({
   searchParams,

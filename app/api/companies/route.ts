@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/middleware-helpers"
 import { createAuditLog } from "@/lib/audit"
 
-// Force dynamic rendering due to searchParams usage
-export const dynamic = "force-dynamic"
+// Use ISR for better performance - revalidate every 60 seconds
+export const revalidate = 60
+export const dynamic = "auto"
 
 // Helper function to generate slug from name
 function generateSlug(name: string): string {
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       reviewCount: company._count.reviews,
     }))
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       companies: companiesWithCount,
       pagination: {
         page,
@@ -79,6 +80,16 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     })
+
+    // Add caching headers for GET requests (only when no search filters)
+    if (!query && !industry && !location) {
+      response.headers.set(
+        "Cache-Control",
+        "public, s-maxage=60, stale-while-revalidate=120"
+      )
+    }
+
+    return response
   } catch (error) {
     console.error("Error fetching companies:", error)
     return NextResponse.json(

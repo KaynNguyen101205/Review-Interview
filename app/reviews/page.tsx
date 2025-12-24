@@ -23,16 +23,108 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
     page,
   })
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/reviews?${params}`,
-    { cache: "no-store" }
-  )
+  // Use direct database query instead of API call for better performance
+  const { prisma } = await import("@/lib/prisma")
+  
+  const companySlug = searchParams.companySlug || ""
+  const role = searchParams.role || ""
+  const season = searchParams.season || ""
+  const year = searchParams.year || ""
+  const location = searchParams.location || ""
+  const difficulty = searchParams.difficulty || ""
+  const outcome = searchParams.outcome || ""
+  const sort = searchParams.sort || "newest"
+  const page = parseInt(searchParams.page || "1", 10)
+  const limit = 12
+  const skip = (page - 1) * limit
 
-  if (!response.ok) {
-    return <p className="text-muted-foreground">Failed to load reviews.</p>
+  const where: any = {
+    status: "APPROVED",
   }
 
-  const data = await response.json()
+  if (companySlug) {
+    const company = await prisma.company.findUnique({
+      where: { slug: companySlug },
+      select: { id: true },
+    })
+    if (company) {
+      where.companyId = company.id
+    } else {
+      return <p className="text-muted-foreground">No reviews found.</p>
+    }
+  }
+
+  if (role) {
+    where.roleTitle = { contains: role, mode: "insensitive" }
+  }
+  if (season) {
+    where.season = season
+  }
+  if (year) {
+    where.year = parseInt(year, 10)
+  }
+  if (location) {
+    where.location = { contains: location, mode: "insensitive" }
+  }
+  if (difficulty) {
+    const difficultyNum = parseInt(difficulty, 10)
+    if (!isNaN(difficultyNum) && difficultyNum >= 1 && difficultyNum <= 5) {
+      where.difficulty = difficultyNum
+    }
+  }
+  if (outcome) {
+    where.outcome = outcome
+  }
+
+  let orderBy: any = {}
+  if (sort === "newest") {
+    orderBy = { publishedAt: "desc" }
+  } else if (sort === "helpful") {
+    orderBy = { helpfulScore: "desc" }
+  }
+
+  const [reviews, total] = await Promise.all([
+    prisma.review.findMany({
+      where,
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            school: true,
+          },
+        },
+        votes: {
+          where: { value: "UP" },
+        },
+      },
+      orderBy,
+      skip,
+      take: limit,
+    }),
+    prisma.review.count({ where }),
+  ])
+
+  const data = {
+    reviews: reviews.map((review) => ({
+      ...review,
+      helpfulScore: review.votes.length,
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
 
   return (
     <div>
@@ -107,6 +199,10 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
     </div>
   )
 }
+
+// Enable partial prerendering for better performance
+export const dynamic = "auto"
+export const revalidate = 60
 
 export default function ReviewsPage({
   searchParams,

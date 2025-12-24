@@ -10,6 +10,11 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  // Performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  // Optimize bundle size
+  swcMinify: true,
 }
 
 // Only wrap with Sentry if org and project are configured AND we're in production

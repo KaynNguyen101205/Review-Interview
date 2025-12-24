@@ -5,7 +5,9 @@ import { sanitizeText } from "@/lib/validation"
 import { checkRateLimit } from "@/lib/validation"
 
 // Force dynamic rendering due to searchParams usage
-export const dynamic = "force-dynamic"
+// Use ISR for better performance - revalidate every 60 seconds
+export const revalidate = 60
+export const dynamic = "auto"
 
 export async function GET(request: NextRequest) {
   try {

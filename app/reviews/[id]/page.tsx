@@ -4,22 +4,62 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import VoteButton from "@/components/reviews/VoteButton"
 import ReportButton from "@/components/reviews/ReportButton"
 
-async function getReview(id: string, userId?: string) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/reviews/${id}`,
-    { cache: "no-store" }
-  )
+// Enable ISR for review pages - revalidate every 5 minutes
+export const revalidate = 300
 
-  if (!response.ok) {
+async function getReview(id: string, userId?: string) {
+  const { prisma } = await import("@/lib/prisma")
+  
+  const review = await prisma.review.findUnique({
+    where: { id },
+    include: {
+      company: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          industry: true,
+          hqLocation: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          school: true,
+          major: true,
+          gradYear: true,
+        },
+      },
+      votes: {
+        include: {
+          user: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!review) {
     return null
   }
 
-  const review = await response.json()
-  // Add currentUserId for client component
-  if (review) {
-    (review as any).currentUserId = userId
+  // Check if user has voted
+  let userVote = null
+  if (userId) {
+    userVote = review.votes.find((vote) => vote.user.id === userId)
   }
-  return review
+
+  return {
+    ...review,
+    currentUserId: userId,
+    userVote: userVote ? userVote.value : null,
+    helpfulScore: review.votes.filter((v) => v.value === "UP").length,
+  }
 }
 
 export default async function ReviewPage({
@@ -145,13 +185,8 @@ export default async function ReviewPage({
           <div className="flex gap-4">
             <VoteButton
               reviewId={review.id}
-              initialVote={
-                review.votes?.find((v: any) => v.userId === (review as any).currentUserId) ||
-                null
-              }
-              initialHelpfulCount={
-                review.votes?.filter((v: any) => v.value === "UP").length || 0
-              }
+              initialVote={review.userVote}
+              initialHelpfulCount={review.helpfulScore}
             />
             <ReportButton reviewId={review.id} />
           </div>
