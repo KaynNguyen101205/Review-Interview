@@ -20,7 +20,7 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
             type: event.type,
             message: event.message || event.exception?.values?.[0]?.value,
             eventId: event.event_id,
-            project: event.project,
+            project: (event as any).project,
             environment: event.environment,
             level: event.level,
           })
