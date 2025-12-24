@@ -125,6 +125,13 @@ export default function ReviewForm({ companies, review }: ReviewFormProps) {
         throw new Error(errorData.error || "Failed to submit review")
       }
 
+      // Show success message and redirect
+      alert(
+        review
+          ? "Review updated successfully! It will be reviewed by an admin."
+          : "Review submitted successfully! Your review is pending approval and will be reviewed by an admin."
+      )
+
       // Redirect to my reviews page
       router.push("/me/reviews")
       router.refresh()

@@ -148,6 +148,31 @@ export default function ReviewsPage({
             defaultValue={searchParams.year || ""}
           />
           <select
+            name="difficulty"
+            defaultValue={searchParams.difficulty || ""}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">All Difficulties</option>
+            <option value="1">Difficulty: 1</option>
+            <option value="2">Difficulty: 2</option>
+            <option value="3">Difficulty: 3</option>
+            <option value="4">Difficulty: 4</option>
+            <option value="5">Difficulty: 5</option>
+          </select>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <select
+            name="outcome"
+            defaultValue={searchParams.outcome || ""}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">All Outcomes</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Withdrew">Withdrew</option>
+            <option value="No Response">No Response</option>
+          </select>
+          <select
             name="sort"
             defaultValue={searchParams.sort || "newest"}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"

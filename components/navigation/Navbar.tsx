@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
+import NotificationBell from "@/components/notifications/NotificationBell"
 
 export default function Navbar() {
   const { data: session } = useSession()
@@ -28,6 +29,7 @@ export default function Navbar() {
                   Admin
                 </Link>
               )}
+              <NotificationBell />
               <Link href="/me" className="hover:text-primary">
                 My Account
               </Link>

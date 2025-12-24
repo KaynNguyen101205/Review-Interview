@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/middleware-helpers"
 import { createAuditLog } from "@/lib/audit"
+import {
+  notifyCompanyRequestApproved,
+  notifyCompanyRequestRejected,
+} from "@/lib/notifications"
 
 // Helper function to generate slug from name
 function generateSlug(name: string): string {
@@ -110,6 +114,15 @@ export async function PATCH(
         details: `Approved company request and created company: ${company.name}`,
       })
 
+      // Notify requester if userId exists
+      if (companyRequest.userId) {
+        await notifyCompanyRequestApproved(
+          company.slug,
+          companyRequest.userId,
+          company.name
+        )
+      }
+
       return NextResponse.json({
         success: true,
         company,
@@ -132,6 +145,15 @@ export async function PATCH(
         entityId: params.id,
         details: `Rejected company request: ${companyRequest.requestedName}`,
       })
+
+      // Notify requester if userId exists
+      if (companyRequest.userId) {
+        await notifyCompanyRequestRejected(
+          companyRequest.userId,
+          companyRequest.requestedName,
+          rejectionReason?.trim() || undefined
+        )
+      }
 
       return NextResponse.json({
         success: true,

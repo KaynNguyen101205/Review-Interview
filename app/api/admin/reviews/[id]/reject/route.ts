@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/middleware-helpers"
 import { sanitizeText } from "@/lib/validation"
 import { createAuditLog } from "@/lib/audit"
+import { notifyReviewRejected } from "@/lib/notifications"
 
 export async function POST(
   request: NextRequest,
@@ -63,6 +64,9 @@ export async function POST(
       entityId: params.id,
       details: `Rejected review. Reason: ${sanitizeText(reason)}`,
     })
+
+    // Notify user
+    await notifyReviewRejected(params.id, review.userId, sanitizeText(reason))
 
     return NextResponse.json({
       success: true,

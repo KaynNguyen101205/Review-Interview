@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     const season = searchParams.get("season") || ""
     const year = searchParams.get("year") || ""
     const location = searchParams.get("location") || ""
+    const difficulty = searchParams.get("difficulty") || ""
+    const outcome = searchParams.get("outcome") || ""
     const sort = searchParams.get("sort") || "newest"
     const page = parseInt(searchParams.get("page") || "1", 10)
     const limit = 10
@@ -60,6 +62,17 @@ export async function GET(request: NextRequest) {
 
     if (location) {
       where.location = { contains: location, mode: "insensitive" }
+    }
+
+    if (difficulty) {
+      const difficultyNum = parseInt(difficulty, 10)
+      if (!isNaN(difficultyNum) && difficultyNum >= 1 && difficultyNum <= 5) {
+        where.difficulty = difficultyNum
+      }
+    }
+
+    if (outcome) {
+      where.outcome = outcome
     }
 
     // Build orderBy clause

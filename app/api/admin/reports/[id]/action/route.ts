@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/middleware-helpers"
 import { updateCompanyStats } from "@/lib/company-stats"
 import { createAuditLog } from "@/lib/audit"
+import { notifyReportActioned, notifyReviewNeedsEdit } from "@/lib/notifications"
 
 export async function POST(
   request: NextRequest,
@@ -33,6 +34,8 @@ export async function POST(
       return NextResponse.json({ error: "Report not found" }, { status: 404 })
     }
 
+    const review = report.review
+
     // Update report status to RESOLVED
     await prisma.reviewReport.update({
       where: { id: params.id },
@@ -49,11 +52,11 @@ export async function POST(
           status: "NEEDS_EDIT",
         },
       })
+      // Notify review owner
+      if (review) {
+        await notifyReviewNeedsEdit(report.reviewId, review.userId)
+      }
     } else if (actionType === "REMOVE") {
-      const review = await prisma.review.findUnique({
-        where: { id: report.reviewId },
-      })
-
       await prisma.review.update({
         where: { id: report.reviewId },
         data: {
@@ -64,6 +67,11 @@ export async function POST(
       // If review was approved, update company stats
       if (review?.status === "APPROVED") {
         await updateCompanyStats(review.companyId)
+      }
+
+      // Notify review owner
+      if (review) {
+        await notifyReportActioned(report.reviewId, review.userId, "REMOVED")
       }
     }
 

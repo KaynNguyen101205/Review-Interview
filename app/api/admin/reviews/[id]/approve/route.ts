@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/middleware-helpers"
 import { updateCompanyStats } from "@/lib/company-stats"
 import { createAuditLog } from "@/lib/audit"
+import { notifyReviewApproved } from "@/lib/notifications"
 
 export async function POST(
   request: NextRequest,
@@ -56,6 +57,9 @@ export async function POST(
       entityId: params.id,
       details: `Approved review for company: ${updatedReview.company.name}`,
     })
+
+    // Notify user
+    await notifyReviewApproved(params.id, review.userId)
 
     return NextResponse.json({
       success: true,

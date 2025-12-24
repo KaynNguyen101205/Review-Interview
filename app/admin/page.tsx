@@ -77,6 +77,20 @@ export default async function AdminPage() {
             </Link>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>Manage user roles and permissions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/admin/users">
+              <Button variant="outline" className="mt-4 w-full">
+                Manage Users
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
