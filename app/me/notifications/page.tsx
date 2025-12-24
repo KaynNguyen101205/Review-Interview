@@ -7,11 +7,17 @@ import { Button } from "@/components/ui/button"
 import NotificationList from "@/components/notifications/NotificationList"
 
 async function getNotifications(userId: string) {
-  return await prisma.notification.findMany({
+  const notifications = await prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 100,
   })
+
+  // Convert Date objects to ISO strings for client components
+  return notifications.map((notification) => ({
+    ...notification,
+    createdAt: notification.createdAt.toISOString(),
+  }))
 }
 
 export default async function NotificationsPage() {

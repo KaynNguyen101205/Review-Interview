@@ -25,7 +25,13 @@ export async function GET(request: NextRequest) {
       take: limit,
     })
 
-    return NextResponse.json({ notifications })
+    // Convert Date objects to ISO strings for JSON serialization
+    const serializedNotifications = notifications.map((notification) => ({
+      ...notification,
+      createdAt: notification.createdAt.toISOString(),
+    }))
+
+    return NextResponse.json({ notifications: serializedNotifications })
   } catch (error) {
     console.error("Error fetching notifications:", error)
     return NextResponse.json(
