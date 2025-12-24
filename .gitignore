@@ -47,6 +47,8 @@ node_modules/.prisma/
 # Prisma Studio database file
 *.db
 *.db-journal
+# Prisma migration lock files
+prisma/migrations/.migrate_lock
 
 # Sentry
 .env.sentry-build-plugin
@@ -120,9 +122,6 @@ yarn-error.log*
 
 # Local development
 .local/
-
-# Prisma migrations (keep migrations folder but ignore lock files)
-prisma/migrations/.migrate_lock
 
 # Database files
 *.sqlite

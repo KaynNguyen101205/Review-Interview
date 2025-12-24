@@ -36,7 +36,12 @@ jobs:
           DATABASE_URL: postgresql://user:password@localhost:5432/db
 
       - name: Check Prisma Migrations
-        run: npx prisma migrate status || echo "No migrations to check"
+        run: |
+          if [ -d "prisma/migrations" ]; then
+            npx prisma migrate status || echo "Migration status check completed"
+          else
+            echo "No migrations directory found"
+          fi
         continue-on-error: true
         env:
           # Dummy DATABASE_URL for migration check (not used for actual connection)
@@ -82,7 +87,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:password@localhost:5432/db' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'dummy-secret-for-ci' }}
-          # Optional: Add other required env vars if needed
+          # OAuth providers (optional for build)
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID || '' }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET || '' }}
+          # Public app URL (optional)
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
 
