@@ -26,9 +26,9 @@ async function getUsers() {
 }
 
 export default async function AdminUsersPage() {
-  const user = await getCurrentUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user || (user as any).role !== "ADMIN") {
+  if (!currentUser || (currentUser as any).role !== "ADMIN") {
     redirect("/")
   }
 
@@ -82,7 +82,11 @@ export default async function AdminUsersPage() {
                   <div className="text-sm text-muted-foreground">
                     Joined: {new Date(user.createdAt).toLocaleDateString()}
                   </div>
-                  <UserRoleManager userId={user.id} currentRole={user.role} />
+                  <UserRoleManager 
+                    userId={user.id} 
+                    currentRole={user.role}
+                    currentUserId={(currentUser as any).id}
+                  />
                 </div>
               </CardContent>
             </Card>

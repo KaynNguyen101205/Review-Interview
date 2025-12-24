@@ -6,28 +6,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 
 async function getUserReviews(userId: string) {
-  const reviews = await prisma.review.findMany({
-    where: { userId },
-    include: {
-      company: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { userId },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
         },
-      },
-      _count: {
-        select: {
-          votes: {
-            where: { value: "UP" },
+        _count: {
+          select: {
+            votes: {
+              where: { value: "UP" },
+            },
           },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  })
+      orderBy: { createdAt: "desc" },
+    })
 
-  return reviews
+    return reviews
+  } catch (error) {
+    console.error("Error fetching user reviews:", error)
+    // Return empty array instead of throwing to prevent server crash
+    return []
+  }
 }
 
 function getStatusBadgeColor(status: string) {
@@ -48,13 +54,14 @@ function getStatusBadgeColor(status: string) {
 }
 
 export default async function MyReviewsPage() {
-  const user = await getCurrentUser()
+  try {
+    const user = await getCurrentUser()
 
-  if (!user) {
-    redirect("/login")
-  }
+    if (!user) {
+      redirect("/login")
+    }
 
-  const reviews = await getUserReviews((user as any).id)
+    const reviews = await getUserReviews((user as any).id)
 
   // Group reviews by status
   const reviewsByStatus = {
@@ -338,6 +345,29 @@ export default async function MyReviewsPage() {
         </div>
       )}
     </div>
-  )
+    )
+  } catch (error) {
+    console.error("Error in MyReviewsPage:", error)
+    // Show error message to user instead of crashing
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <Card>
+          <CardContent className="py-8 text-center">
+            <h1 className="text-2xl font-bold mb-4 text-red-600">Error Loading Reviews</h1>
+            <p className="text-muted-foreground mb-4">
+              {error instanceof Error 
+                ? error.message.includes("Can't reach database")
+                  ? "Database connection failed. Please check your database connection."
+                  : error.message
+                : "An unexpected error occurred. Please try again later."}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              If this problem persists, please check your database connection settings.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 }
 

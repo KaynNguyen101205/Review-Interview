@@ -74,3 +74,58 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await requireAdmin(request)
+    if (user instanceof NextResponse) return user
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: params.id },
+    })
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      )
+    }
+
+    // Prevent admin from deleting themselves
+    if (params.id === (user as any).id) {
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 }
+      )
+    }
+
+    // Get user info before deletion for audit log
+    const userEmail = targetUser.email
+    const userRole = targetUser.role
+
+    // Delete user (cascade will handle related records)
+    await prisma.user.delete({
+      where: { id: params.id },
+    })
+
+    // Create audit log
+    await createAuditLog({
+      userId: (user as any).id,
+      action: "USER_DELETED",
+      entityType: "User",
+      entityId: params.id,
+      details: `Deleted user: ${userEmail} (${userRole})`,
+    })
+
+    return NextResponse.json({ message: "User deleted successfully" })
+  } catch (error) {
+    console.error("Error deleting user:", error)
+    return NextResponse.json(
+      { error: "Failed to delete user" },
+      { status: 500 }
+    )
+  }
+}
+

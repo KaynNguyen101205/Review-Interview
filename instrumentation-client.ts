@@ -1,11 +1,17 @@
 import * as Sentry from "@sentry/nextjs"
 
-if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+// Only initialize Sentry in production or if explicitly enabled
+const shouldInitSentry = 
+  process.env.NEXT_PUBLIC_SENTRY_DSN && 
+  (process.env.NODE_ENV === "production" || process.env.ENABLE_SENTRY_IN_DEV === "true")
+
+if (shouldInitSentry) {
   try {
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-      debug: process.env.NODE_ENV === "development",
+      debug: false, // Disable debug in dev to reduce noise
+      enabled: process.env.NODE_ENV === "production" || process.env.ENABLE_SENTRY_IN_DEV === "true",
       replaysOnErrorSampleRate: 1.0,
       replaysSessionSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
       integrations: [
@@ -15,36 +21,26 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
         }),
       ],
       beforeSend(event, hint) {
+        // In development, don't send events to reduce connection errors
         if (process.env.NODE_ENV === "development") {
-          console.log("📤 Sentry event:", {
-            type: event.type,
-            message: event.message || event.exception?.values?.[0]?.value,
-            eventId: event.event_id,
-            project: (event as any).project,
-            environment: event.environment,
-            level: event.level,
-          })
+          return null // Don't send events in development
         }
         return event
       },
       beforeSendTransaction(event) {
+        // In development, don't send transactions to reduce connection errors
         if (process.env.NODE_ENV === "development") {
-          console.log("📊 Sentry transaction:", {
-            transaction: event.transaction,
-            eventId: event.event_id,
-          })
+          return null // Don't send transactions in development
         }
         return event
       },
     })
-    if (process.env.NODE_ENV === "development") {
-      console.log("✅ Sentry initialized (client)")
-    }
   } catch (error) {
-    console.error("❌ Sentry init failed:", error)
+    // Silently fail in development to avoid cluttering logs
+    if (process.env.NODE_ENV === "production") {
+      console.error("❌ Sentry init failed:", error)
+    }
   }
-} else {
-  console.warn("⚠️ NEXT_PUBLIC_SENTRY_DSN not set")
 }
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

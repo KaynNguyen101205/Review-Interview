@@ -12,9 +12,15 @@ const nextConfig = {
   },
 }
 
-// Only wrap with Sentry if org and project are configured
+// Only wrap with Sentry if org and project are configured AND we're in production
 // This prevents webpack from hanging when Sentry env vars are missing
-if (process.env.SENTRY_ORG && process.env.SENTRY_PROJECT) {
+// Also prevents proxy errors in development
+const shouldUseSentry = 
+  process.env.SENTRY_ORG && 
+  process.env.SENTRY_PROJECT && 
+  (process.env.NODE_ENV === "production" || process.env.ENABLE_SENTRY_IN_DEV === "true")
+
+if (shouldUseSentry) {
   module.exports = withSentryConfig(nextConfig, {
     org: process.env.SENTRY_ORG,
     project: process.env.SENTRY_PROJECT,
@@ -30,8 +36,12 @@ if (process.env.SENTRY_ORG && process.env.SENTRY_PROJECT) {
     },
   })
 } else {
-  // Export without Sentry wrapper if env vars are not set
-  console.warn("⚠️ Sentry not configured: SENTRY_ORG and SENTRY_PROJECT must be set")
+  // Export without Sentry wrapper in development or if env vars are not set
+  if (process.env.NODE_ENV === "development") {
+    // Silently skip Sentry in development to avoid proxy errors
+  } else if (!process.env.SENTRY_ORG || !process.env.SENTRY_PROJECT) {
+    console.warn("⚠️ Sentry not configured: SENTRY_ORG and SENTRY_PROJECT must be set")
+  }
   module.exports = nextConfig
 }
 
