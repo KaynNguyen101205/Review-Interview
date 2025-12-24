@@ -6,10 +6,10 @@ const nextConfig = {
     domains: [],
     remotePatterns: [],
   },
-  // Instrumentation hook disabled - can be re-enabled when Sentry is fully configured
-  // experimental: {
-  //   instrumentationHook: true,
-  // },
+  // Enable instrumentation hook for Sentry
+  experimental: {
+    instrumentationHook: true,
+  },
 }
 
 // Only wrap with Sentry if org and project are configured
