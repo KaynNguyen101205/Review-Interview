@@ -25,13 +25,22 @@ jobs:
 
       - name: Generate Prisma Client
         run: npm run db:generate
+        env:
+          # Dummy DATABASE_URL for Prisma Client generation (not used for actual connection)
+          DATABASE_URL: postgresql://user:password@localhost:5432/db
 
       - name: Validate Prisma Schema
         run: npx prisma validate
+        env:
+          # Dummy DATABASE_URL for schema validation (not used for actual connection)
+          DATABASE_URL: postgresql://user:password@localhost:5432/db
 
       - name: Check Prisma Migrations
         run: npx prisma migrate status || echo "No migrations to check"
         continue-on-error: true
+        env:
+          # Dummy DATABASE_URL for migration check (not used for actual connection)
+          DATABASE_URL: postgresql://user:password@localhost:5432/db
 
       - name: Run type check
         run: npm run type-check
