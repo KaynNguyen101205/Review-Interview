@@ -53,6 +53,9 @@ function getStatusBadgeColor(status: string) {
   }
 }
 
+// Force dynamic rendering since we use headers for authentication
+export const dynamic = "force-dynamic"
+
 export default async function MyReviewsPage() {
   try {
     const user = await getCurrentUser()
