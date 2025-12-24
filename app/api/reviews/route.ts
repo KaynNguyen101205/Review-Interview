@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAuth } from "@/lib/middleware-helpers"
+import { sanitizeText } from "@/lib/validation"
+import { checkRateLimit } from "@/lib/validation"
 
 // Force dynamic rendering due to searchParams usage
 export const dynamic = "force-dynamic"
@@ -115,6 +118,117 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching reviews:", error)
     return NextResponse.json(
       { error: "Failed to fetch reviews" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await requireAuth(request)
+    if (user instanceof NextResponse) return user
+
+    // Rate limiting
+    const rateLimitKey = `review:${(user as any).id}`
+    if (!checkRateLimit(rateLimitKey, 5, 60000)) {
+      // 5 reviews per minute
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      )
+    }
+
+    const body = await request.json()
+    const {
+      companyId,
+      level,
+      roleTitle,
+      location,
+      season,
+      year,
+      stagesCount,
+      interviewType,
+      difficulty,
+      outcome,
+      currency,
+      payHourly,
+      payMonthly,
+      payYearly,
+      applicationProcess,
+      interviewExperience,
+      culture,
+      tips,
+      overall,
+    } = body
+
+    // Validation
+    if (!companyId) {
+      return NextResponse.json(
+        { error: "Company ID is required" },
+        { status: 400 }
+      )
+    }
+
+    // Check if company exists
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+    })
+
+    if (!company) {
+      return NextResponse.json(
+        { error: "Company not found" },
+        { status: 404 }
+      )
+    }
+
+    // Create review with PENDING status
+    const review = await prisma.review.create({
+      data: {
+        companyId,
+        userId: (user as any).id,
+        status: "PENDING",
+        level: level || null,
+        roleTitle: sanitizeText(roleTitle) || null,
+        location: sanitizeText(location) || null,
+        season: season || null,
+        year: year ? parseInt(year, 10) : null,
+        stagesCount: stagesCount ? parseInt(stagesCount, 10) : null,
+        interviewType: interviewType || null,
+        difficulty: difficulty ? parseInt(difficulty, 10) : null,
+        outcome: outcome || null,
+        currency: currency || null,
+        payHourly: payHourly ? parseFloat(payHourly) : null,
+        payMonthly: payMonthly ? parseFloat(payMonthly) : null,
+        payYearly: payYearly ? parseFloat(payYearly) : null,
+        applicationProcess: sanitizeText(applicationProcess) || null,
+        interviewExperience: sanitizeText(interviewExperience) || null,
+        culture: sanitizeText(culture) || null,
+        tips: sanitizeText(tips) || null,
+        overall: sanitizeText(overall) || null,
+      },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json(review, { status: 201 })
+  } catch (error) {
+    console.error("Error creating review:", error)
+    return NextResponse.json(
+      { error: "Failed to create review" },
       { status: 500 }
     )
   }
