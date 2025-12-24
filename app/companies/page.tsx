@@ -5,18 +5,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 async function CompaniesList({ searchParams }: { searchParams: any }) {
-  const query = searchParams.query || ""
-  const industry = searchParams.industry || ""
-  const location = searchParams.location || ""
-  const page = searchParams.page || "1"
-
-  const params = new URLSearchParams({
-    ...(query && { query }),
-    ...(industry && { industry }),
-    ...(location && { location }),
-    page,
-  })
-
   // Use direct database query instead of API call for better performance
   const { prisma } = await import("@/lib/prisma")
   

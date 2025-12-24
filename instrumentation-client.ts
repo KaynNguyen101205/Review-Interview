@@ -38,7 +38,7 @@ if (shouldInitSentry) {
   } catch (error) {
     // Silently fail in development to avoid cluttering logs
     if (process.env.NODE_ENV === "production") {
-      console.error("❌ Sentry init failed:", error)
+    console.error("❌ Sentry init failed:", error)
     }
   }
 }

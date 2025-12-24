@@ -5,24 +5,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 async function ReviewsList({ searchParams }: { searchParams: any }) {
-  const companySlug = searchParams.companySlug || ""
-  const role = searchParams.role || ""
-  const season = searchParams.season || ""
-  const year = searchParams.year || ""
-  const location = searchParams.location || ""
-  const sort = searchParams.sort || "newest"
-  const page = searchParams.page || "1"
-
-  const params = new URLSearchParams({
-    ...(companySlug && { companySlug }),
-    ...(role && { role }),
-    ...(season && { season }),
-    ...(year && { year }),
-    ...(location && { location }),
-    sort,
-    page,
-  })
-
   // Use direct database query instead of API call for better performance
   const { prisma } = await import("@/lib/prisma")
   
