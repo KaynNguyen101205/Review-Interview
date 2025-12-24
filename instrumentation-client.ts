@@ -16,7 +16,23 @@ if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
       ],
       beforeSend(event, hint) {
         if (process.env.NODE_ENV === "development") {
-          console.log("📤 Sentry event:", event.type, event.message || event.exception?.values?.[0]?.value)
+          console.log("📤 Sentry event:", {
+            type: event.type,
+            message: event.message || event.exception?.values?.[0]?.value,
+            eventId: event.event_id,
+            project: event.project,
+            environment: event.environment,
+            level: event.level,
+          })
+        }
+        return event
+      },
+      beforeSendTransaction(event) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("📊 Sentry transaction:", {
+            transaction: event.transaction,
+            eventId: event.event_id,
+          })
         }
         return event
       },

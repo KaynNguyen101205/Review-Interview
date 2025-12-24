@@ -34,15 +34,33 @@ export default function TestSentryPage() {
         tags: {
           test: "true",
           source: "test-sentry-page",
+          environment: "development",
         },
         extra: {
           timestamp: new Date().toISOString(),
         },
+        level: "error",
       })
       setLastEventId(eventId || null)
-      console.log("Error captured, event ID:", eventId)
-      console.log("Error details:", error)
-      alert(`Error sent to Sentry! Event ID: ${eventId || "unknown"}\n\nCheck:\n1. Browser console (F12)\n2. Network tab for Sentry requests\n3. Your Sentry dashboard`)
+      console.log("✅ Error captured, event ID:", eventId)
+      console.log("📋 Error details:", error)
+      console.log("🌐 Check Network tab for requests to:", "*.sentry.io")
+      
+      // Wait a moment then check if event was sent
+      setTimeout(() => {
+        const sentryUrl = process.env.NEXT_PUBLIC_SENTRY_DSN?.match(/https:\/\/(.+)@(.+)\/(.+)/)?.[2]
+        alert(
+          `Error sent to Sentry!\n\n` +
+          `Event ID: ${eventId || "unknown"}\n` +
+          `DSN: ${sentryUrl || "unknown"}\n\n` +
+          `To verify:\n` +
+          `1. Open browser console (F12) - look for "📤 Sentry event"\n` +
+          `2. Check Network tab - filter by "sentry.io"\n` +
+          `3. Go to: https://sentry.io/organizations/nam-khanh/projects/javascript-nextjs/issues/\n` +
+          `4. Make sure you're viewing "All Issues" not filtered\n` +
+          `5. Refresh the dashboard (events may take 10-30 seconds to appear)`
+        )
+      }, 100)
     }
   }
 
