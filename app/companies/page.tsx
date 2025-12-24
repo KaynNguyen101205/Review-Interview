@@ -21,6 +21,11 @@ async function CompaniesList({ searchParams }: { searchParams: any }) {
     `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/companies?${params}`,
     { cache: "no-store" }
   )
+
+  if (!response.ok) {
+    return <p className="text-muted-foreground">Failed to load companies.</p>
+  }
+
   const data = await response.json()
 
   return (
