@@ -59,7 +59,7 @@ export default function CompanyForm({ company }: CompanyFormProps) {
         description: formData.description?.trim() || null,
       }
 
-      const url = company ? `/api/companies/${company.id}` : "/api/companies"
+      const url = company ? `/api/companies/${company.slug}` : "/api/companies"
       const method = company ? "PATCH" : "POST"
 
       const response = await fetch(url, {
