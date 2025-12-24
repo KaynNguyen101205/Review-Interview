@@ -42,8 +42,11 @@ next-env.d.ts
 
 # Prisma
 # Note: migrations should typically be committed, so we don't ignore them
-# Only ignore generated client if needed
-# /prisma/migrations
+# Generated Prisma Client (in node_modules/.prisma)
+node_modules/.prisma/
+# Prisma Studio database file
+*.db
+*.db-journal
 
 # Sentry
 .env.sentry-build-plugin
@@ -117,3 +120,10 @@ yarn-error.log*
 
 # Local development
 .local/
+
+# Prisma migrations (keep migrations folder but ignore lock files)
+prisma/migrations/.migrate_lock
+
+# Database files
+*.sqlite
+*.sqlite3
