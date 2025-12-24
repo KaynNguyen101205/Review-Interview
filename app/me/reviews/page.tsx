@@ -78,7 +78,7 @@ export default async function MyReviewsPage() {
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground mb-4">
-              You haven't submitted any reviews yet.
+              You haven&apos;t submitted any reviews yet.
             </p>
             <Link href="/reviews/new">
               <Button>Write Your First Review</Button>
