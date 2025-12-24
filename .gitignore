@@ -1,17 +1,24 @@
 # Dependencies
-node_modules
+node_modules/
 /.pnp
 .pnp.js
+.pnp.cjs
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Testing
 /coverage
 *.lcov
+.nyc_output
 
 # Next.js
 /.next/
 /out/
-.next
-out
+.next/
+out/
+.swc/
 
 # Production
 /build
@@ -27,19 +34,24 @@ next-env.d.ts
 .env.development.local
 .env.test.local
 .env.production.local
+.env.local
 
 # Vercel
 .vercel
+.vercel.json
 
 # Prisma
-/prisma/migrations
+# Note: migrations should typically be committed, so we don't ignore them
+# Only ignore generated client if needed
+# /prisma/migrations
 
 # Sentry
 .env.sentry-build-plugin
 .sentryclirc
+.sentry/
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -49,26 +61,42 @@ lerna-debug.log*
 
 # Cache
 .cache/
-.parcel-cache
-.turbo
+.parcel-cache/
+.turbo/
 .prettiercache
 .eslintcache
+.stylelintcache
 
 # Temporary files
 *.tmp
 *.temp
 *~
-
-# IDE
-.vscode/
-.idea/
+*.bak
 *.swp
 *.swo
+
+# IDE - VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Other
 .project
 .classpath
 .settings/
 *.sublime-project
 *.sublime-workspace
+
+# IDE - Cursor
+.cursor/
 
 # OS
 .DS_Store
@@ -79,3 +107,13 @@ lerna-debug.log*
 ehthumbs.db
 Desktop.ini
 Thumbs.db
+$RECYCLE.BIN/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local development
+.local/
