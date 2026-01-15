@@ -25,6 +25,17 @@ export default function SentryVerify() {
     const [, key, host, projectId] = match
     const orgId = host.match(/o(\d+)/)?.[1]
 
+    // Send a test event first
+    const testError = new Error(`Verification test - ${new Date().toISOString()}`)
+    const id = Sentry.captureException(testError, {
+      tags: { verification: "true", source: "verify-page" },
+      level: "error",
+    })
+    
+    // Update eventId state
+    setEventId(id || null)
+    
+    // Update status with the event ID
     setStatus(
       `✅ DSN configured\n` +
       `   Project ID: ${projectId}\n` +
@@ -32,17 +43,9 @@ export default function SentryVerify() {
       `   Host: ${host}\n\n` +
       `📊 Dashboard URL:\n` +
       `   https://sentry.io/organizations/nam-khanh/projects/javascript-nextjs/issues/\n\n` +
-      `🔍 Search for event ID: ${eventId || "Click button below"}`
+      `🔍 Search for event ID: ${id || "Click button below"}`
     )
-
-    // Send a test event
-    const testError = new Error(`Verification test - ${new Date().toISOString()}`)
-    const id = Sentry.captureException(testError, {
-      tags: { verification: "true", source: "verify-page" },
-      level: "error",
-    })
-    setEventId(id || null)
-  }, [])
+  }, []) // eventId is set inside the effect, so it doesn't need to be in dependencies
 
   return (
     <div className="p-8 max-w-2xl mx-auto">

@@ -1,6 +1,5 @@
 "use client"
 
-import * as Sentry from "@sentry/nextjs"
 import { useEffect } from "react"
 
 export default function GlobalError({
@@ -11,8 +10,16 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log the error to Sentry
-    Sentry.captureException(error)
+    // Log the error to Sentry only if configured and in production
+    if (
+      process.env.NEXT_PUBLIC_SENTRY_DSN &&
+      (process.env.NODE_ENV === "production" || process.env.ENABLE_SENTRY_IN_DEV === "true")
+    ) {
+      // Dynamically import Sentry to avoid critical dependency warnings
+      import("@sentry/nextjs").then((Sentry) => {
+        Sentry.captureException(error)
+      })
+    }
   }, [error])
 
   return (
