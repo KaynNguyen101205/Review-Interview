@@ -1,8 +1,8 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import ReviewCardCollapsible from "@/components/reviews/ReviewCardCollapsible"
 
 async function ReviewsList({ searchParams }: { searchParams: any }) {
   // Use direct database query instead of API call for better performance
@@ -129,50 +129,34 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
           </p>
           <div className="space-y-4">
             {data.reviews?.map((review: any) => (
-              <Link key={review.id} href={`/reviews/${review.id}`}>
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>
-                          {review.roleTitle || "Review"} at {review.company.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {review.user.name || review.user.email}
-                          {review.user.school && ` • ${review.user.school}`}
-                          {review.season && review.year && ` • ${review.season} ${review.year}`}
-                        </CardDescription>
-                      </div>
-                      {review.difficulty && (
-                        <div className="text-sm">
-                          Difficulty: {review.difficulty}/5
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
-                      {review.workOption && (
-                        <span>{review.workOption === "ONSITE" ? "Onsite" : review.workOption === "REMOTE" ? "Remote" : "Hybrid"}</span>
-                      )}
-                      {review.location && <span>• {review.location}</span>}
-                      {review.payHourly != null && (
-                        <span>• {Number(review.payHourly).toFixed(0)} USD/hr</span>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {review.overall && (
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {review.overall}
-                      </p>
-                    )}
-                    <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
-                      {review.helpfulScore > 0 && (
-                        <span>{review.helpfulScore} helpful</span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <ReviewCardCollapsible
+                key={review.id}
+                review={{
+                  id: review.id,
+                  roleTitle: review.roleTitle,
+                  outcome: review.outcome,
+                  location: review.location,
+                  workOption: review.workOption,
+                  payHourly: review.payHourly,
+                  season: review.season,
+                  year: review.year,
+                  level: review.level,
+                  applicationProcess: review.applicationProcess,
+                  interviewExperience: review.interviewExperience,
+                  culture: review.culture,
+                  tips: review.tips,
+                  overall: review.overall,
+                  difficulty: review.difficulty,
+                  stagesCount: review.stagesCount,
+                  interviewType: review.interviewType,
+                  publishedAt: review.publishedAt?.toISOString?.() ?? review.publishedAt,
+                  company: review.company,
+                  user: review.user,
+                  votes: review.votes,
+                }}
+                helpfulScore={review.helpfulScore ?? review.votes?.length ?? 0}
+                showCompanyName={true}
+              />
             ))}
           </div>
         </>

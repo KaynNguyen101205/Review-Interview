@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import ReviewCardCollapsible from "@/components/reviews/ReviewCardCollapsible"
 
 // Enable ISR for company pages - revalidate every 5 minutes
 export const revalidate = 300
@@ -90,37 +89,34 @@ export default async function CompanyPage({
         ) : (
           <div className="space-y-4">
             {company.reviews?.map((review: any) => (
-              <Link key={review.id} href={`/reviews/${review.id}`}>
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle>
-                      {review.roleTitle || "Review"} - {review.season} {review.year}
-                    </CardTitle>
-                    <CardDescription>
-                      {review.workOption && `${review.workOption === "ONSITE" ? "Onsite" : review.workOption === "REMOTE" ? "Remote" : "Hybrid"} • `}
-                      {review.location && `${review.location} • `}
-                      Difficulty: {review.difficulty}/5
-                      {review.outcome && ` • ${review.outcome}`}
-                    </CardDescription>
-                    {review.payHourly != null && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {Number(review.payHourly).toFixed(0)} USD/hr
-                      </p>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    {review.overall && (
-                      <p className="text-sm line-clamp-3">{review.overall}</p>
-                    )}
-                    <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
-                      <span>
-                        {review.votes?.filter((v: any) => v.value === "UP").length || 0} helpful
-                      </span>
-                      <span>By {review.user?.name || "Anonymous"}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <ReviewCardCollapsible
+                key={review.id}
+                review={{
+                  id: review.id,
+                  roleTitle: review.roleTitle,
+                  outcome: review.outcome,
+                  location: review.location,
+                  workOption: review.workOption,
+                  payHourly: review.payHourly,
+                  season: review.season,
+                  year: review.year,
+                  level: review.level,
+                  applicationProcess: review.applicationProcess,
+                  interviewExperience: review.interviewExperience,
+                  culture: review.culture,
+                  tips: review.tips,
+                  overall: review.overall,
+                  difficulty: review.difficulty,
+                  stagesCount: review.stagesCount,
+                  interviewType: review.interviewType,
+                  publishedAt: review.publishedAt?.toISOString?.() ?? review.publishedAt,
+                  company: { id: company.id, name: company.name, slug: company.slug },
+                  user: review.user,
+                  votes: review.votes,
+                }}
+                helpfulScore={review.votes?.filter((v: any) => v.value === "UP").length ?? 0}
+                showCompanyName={false}
+              />
             ))}
           </div>
         )}
