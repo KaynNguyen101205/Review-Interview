@@ -10,4 +10,4 @@
   NPM_FLAGS = "--legacy-peer-deps"
   # Sentry SDK inlines org/project/DSN into client bundles; these are not sensitive (DSN is public by design).
   # SENTRY_AUTH_TOKEN stays server-only and is not omitted.
-  SECRETS_SCAN_OMIT_KEYS = "SENTRY_ORG,SENTRY_PROJECT,SENTRY_DSN"
+  SECRETS_SCAN_OMIT_KEYS = "SENTRY_ORG,SENTRY_PROJECT,SENTRY_DSN,NEXT_PUBLIC_SENTRY_DSN"
