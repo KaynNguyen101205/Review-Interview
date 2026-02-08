@@ -82,11 +82,10 @@ export default function NotificationBell() {
 
   return (
     <div className="relative">
-      <Button
-        variant="ghost"
-        size="sm"
+      <button
+        type="button"
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative"
+        className="relative hover:text-primary"
       >
         Notification
         {unreadCount > 0 && (
@@ -94,7 +93,7 @@ export default function NotificationBell() {
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
-      </Button>
+      </button>
 
       {showDropdown && (
         <div className="absolute right-0 mt-2 w-80 bg-background border rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">

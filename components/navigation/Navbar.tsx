@@ -23,7 +23,7 @@ export default function Navbar() {
             Reviews
           </Link>
           <Link href="/about-us" className="hover:text-primary">
-            About Us
+            About
           </Link>
           {session ? (
             <>
@@ -34,15 +34,19 @@ export default function Navbar() {
               )}
               <NotificationBell />
               <Link href="/me" className="hover:text-primary">
-                My Account
+                Account
               </Link>
-              <Button variant="ghost" onClick={() => signOut()}>
-                Sign Out
-              </Button>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="hover:text-primary"
+              >
+                SignOut
+              </button>
             </>
           ) : (
             <Link href="/login">
-              <Button>Sign In</Button>
+              <Button>SignIn</Button>
             </Link>
           )}
         </div>
