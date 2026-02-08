@@ -40,6 +40,10 @@ async function CompaniesList({ searchParams }: { searchParams: any }) {
             },
           },
         },
+        reviews: {
+          where: { status: "APPROVED" },
+          select: { payHourly: true },
+        },
       },
       orderBy: { name: "asc" },
       skip,
@@ -49,10 +53,18 @@ async function CompaniesList({ searchParams }: { searchParams: any }) {
   ])
 
   const data = {
-    companies: companies.map((company) => ({
-      ...company,
-      reviewCount: company._count.reviews,
-    })),
+    companies: companies.map((company) => {
+      const withPay = company.reviews.filter((r: any) => r.payHourly != null)
+      const avgSalaryUsdPerHour =
+        withPay.length > 0
+          ? withPay.reduce((s: number, r: any) => s + Number(r.payHourly), 0) / withPay.length
+          : null
+      return {
+        ...company,
+        reviewCount: company._count.reviews,
+        avgSalaryUsdPerHour,
+      }
+    }),
     pagination: {
       page,
       limit,
@@ -81,11 +93,16 @@ async function CompaniesList({ searchParams }: { searchParams: any }) {
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {company.description}
                   </p>
-                  {company.reviewCount > 0 && (
-                    <p className="text-sm mt-2">
-                      {company.reviewCount} review{company.reviewCount !== 1 ? "s" : ""}
-                    </p>
-                  )}
+                  <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
+                    {company.reviewCount > 0 && (
+                      <span>
+                        {company.reviewCount} review{company.reviewCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                    {company.avgSalaryUsdPerHour != null && (
+                      <span>Avg {company.avgSalaryUsdPerHour.toFixed(0)} USD/hr</span>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </Link>

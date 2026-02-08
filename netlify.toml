@@ -1,0 +1,10 @@
+# Netlify configuration for Next.js (Review Platform)
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+# Next.js is auto-detected; the OpenNext adapter handles publish/output.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"

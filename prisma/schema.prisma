@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -114,6 +115,7 @@ model Review {
   status            String     @default("PENDING") // PENDING, APPROVED, REJECTED, REMOVED, NEEDS_EDIT
   level             String?    // e.g., "Intern", "New Grad"
   roleTitle         String?
+  workOption        String?    // ONSITE, REMOTE, HYBRID
   location          String?
   season            String?    // e.g., "Summer", "Fall", "Winter", "Spring"
   year              Int?
@@ -149,6 +151,7 @@ model Review {
   @@index([season])
   @@index([year])
   @@index([roleTitle])
+  @@index([workOption])
   @@index([publishedAt])
   @@map("reviews")
 }

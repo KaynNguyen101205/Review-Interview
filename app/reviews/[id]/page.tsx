@@ -87,8 +87,14 @@ export default async function ReviewPage({
         <h1 className="text-4xl font-bold mb-4">
           {review.roleTitle || "Review"} - {review.season} {review.year}
         </h1>
-        <div className="flex gap-4 text-muted-foreground mb-4">
+        <div className="flex flex-wrap gap-4 text-muted-foreground mb-4">
+          {review.workOption && (
+            <span>Work: {review.workOption === "ONSITE" ? "Onsite" : review.workOption === "REMOTE" ? "Remote" : "Hybrid"}</span>
+          )}
           {review.location && <span>Location: {review.location}</span>}
+          {review.payHourly != null && (
+            <span>{Number(review.payHourly).toFixed(0)} USD/hr</span>
+          )}
           {review.difficulty && <span>Difficulty: {review.difficulty}/5</span>}
           {review.outcome && <span>Outcome: {review.outcome}</span>}
           {review.stagesCount && <span>Stages: {review.stagesCount}</span>}
@@ -157,21 +163,13 @@ export default async function ReviewPage({
           </Card>
         )}
 
-        {(review.payHourly || review.payMonthly || review.payYearly) && (
+        {review.payHourly != null && (
           <Card>
             <CardHeader>
               <CardTitle>Compensation</CardTitle>
             </CardHeader>
             <CardContent>
-              {review.payHourly && (
-                <p>Hourly: {review.currency || "$"}{review.payHourly}</p>
-              )}
-              {review.payMonthly && (
-                <p>Monthly: {review.currency || "$"}{review.payMonthly}</p>
-              )}
-              {review.payYearly && (
-                <p>Yearly: {review.currency || "$"}{review.payYearly}</p>
-              )}
+              <p>{Number(review.payHourly).toFixed(0)} USD/hr</p>
             </CardContent>
           </Card>
         )}

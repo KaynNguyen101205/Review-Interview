@@ -29,7 +29,15 @@ async function getCompany(slug: string) {
     },
   })
 
-  return company
+  if (!company) return null
+
+  const withPay = company.reviews.filter((r) => r.payHourly != null)
+  const avgSalaryUsdPerHour =
+    withPay.length > 0
+      ? withPay.reduce((s, r) => s + Number(r.payHourly), 0) / withPay.length
+      : null
+
+  return { ...company, avgSalaryUsdPerHour }
 }
 
 export default async function CompanyPage({
@@ -64,10 +72,13 @@ export default async function CompanyPage({
         {company.description && (
           <p className="mt-4 text-lg">{company.description}</p>
         )}
-        <div className="mt-4 flex gap-4">
-          <span>Reviews: {company.reviewCount || 0}</span>
+        <div className="mt-4 flex flex-wrap gap-4">
+          <span>{company.reviewCount || 0} review{(company.reviewCount || 0) !== 1 ? "s" : ""}</span>
           {company.avgDifficulty && (
             <span>Avg Difficulty: {company.avgDifficulty.toFixed(1)}/5</span>
+          )}
+          {company.avgSalaryUsdPerHour != null && (
+            <span>Avg salary: {company.avgSalaryUsdPerHour.toFixed(0)} USD/hr</span>
           )}
         </div>
       </div>
@@ -86,10 +97,16 @@ export default async function CompanyPage({
                       {review.roleTitle || "Review"} - {review.season} {review.year}
                     </CardTitle>
                     <CardDescription>
+                      {review.workOption && `${review.workOption === "ONSITE" ? "Onsite" : review.workOption === "REMOTE" ? "Remote" : "Hybrid"} • `}
                       {review.location && `${review.location} • `}
                       Difficulty: {review.difficulty}/5
                       {review.outcome && ` • ${review.outcome}`}
                     </CardDescription>
+                    {review.payHourly != null && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {Number(review.payHourly).toFixed(0)} USD/hr
+                      </p>
+                    )}
                   </CardHeader>
                   <CardContent>
                     {review.overall && (

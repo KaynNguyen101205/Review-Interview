@@ -25,6 +25,7 @@ interface Review {
   companyId: string
   level?: string | null
   roleTitle?: string | null
+  workOption?: string | null
   location?: string | null
   season?: string | null
   year?: number | null
@@ -57,6 +58,7 @@ export default function ReviewForm({ companies, review }: ReviewFormProps) {
     companyId: review?.companyId || "",
     level: review?.level || "",
     roleTitle: review?.roleTitle || "",
+    workOption: review?.workOption || "",
     location: review?.location || "",
     season: review?.season || "",
     year: review?.year?.toString() || "",
@@ -85,6 +87,7 @@ export default function ReviewForm({ companies, review }: ReviewFormProps) {
         companyId: formData.companyId,
         level: formData.level || null,
         roleTitle: formData.roleTitle || null,
+        workOption: formData.workOption && ["ONSITE", "REMOTE", "HYBRID"].includes(formData.workOption) ? formData.workOption : null,
         location: formData.location || null,
         season: formData.season || null,
         year: formData.year ? parseInt(formData.year, 10) : null,
@@ -258,6 +261,23 @@ export default function ReviewForm({ companies, review }: ReviewFormProps) {
                 disabled={isSubmitting}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="workOption">Work option</Label>
+              <select
+                id="workOption"
+                value={formData.workOption}
+                onChange={(e) =>
+                  setFormData({ ...formData, workOption: e.target.value })
+                }
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                disabled={isSubmitting}
+              >
+                <option value="">Select</option>
+                <option value="ONSITE">Onsite</option>
+                <option value="REMOTE">Remote</option>
+                <option value="HYBRID">Hybrid</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -333,68 +353,22 @@ export default function ReviewForm({ companies, review }: ReviewFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Compensation</Label>
-            <div className="grid gap-4 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label htmlFor="currency" className="text-xs">
-                  Currency
-                </Label>
-                <Input
-                  id="currency"
-                  value={formData.currency}
-                  onChange={(e) =>
-                    setFormData({ ...formData, currency: e.target.value })
-                  }
-                  placeholder="USD"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payHourly" className="text-xs">
-                  Hourly
-                </Label>
-                <Input
-                  id="payHourly"
-                  type="number"
-                  value={formData.payHourly}
-                  onChange={(e) =>
-                    setFormData({ ...formData, payHourly: e.target.value })
-                  }
-                  placeholder="e.g., 50"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payMonthly" className="text-xs">
-                  Monthly
-                </Label>
-                <Input
-                  id="payMonthly"
-                  type="number"
-                  value={formData.payMonthly}
-                  onChange={(e) =>
-                    setFormData({ ...formData, payMonthly: e.target.value })
-                  }
-                  placeholder="e.g., 8000"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payYearly" className="text-xs">
-                  Yearly
-                </Label>
-                <Input
-                  id="payYearly"
-                  type="number"
-                  value={formData.payYearly}
-                  onChange={(e) =>
-                    setFormData({ ...formData, payYearly: e.target.value })
-                  }
-                  placeholder="e.g., 120000"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
+            <Label>Salary (USD per hour only)</Label>
+            <Input
+              id="payHourly"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.payHourly}
+              onChange={(e) =>
+                setFormData({ ...formData, payHourly: e.target.value })
+              }
+              placeholder="e.g., 50"
+              disabled={isSubmitting}
+            />
+            <p className="text-xs text-muted-foreground">
+              Average salary in US dollars per hour
+            </p>
           </div>
 
           <div className="space-y-2">

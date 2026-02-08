@@ -10,6 +10,7 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
   
   const companySlug = searchParams.companySlug || ""
   const role = searchParams.role || ""
+  const workOption = searchParams.workOption || ""
   const season = searchParams.season || ""
   const year = searchParams.year || ""
   const location = searchParams.location || ""
@@ -39,6 +40,9 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
   if (role) {
     where.roleTitle = { contains: role, mode: "insensitive" }
   }
+  if (workOption && ["ONSITE", "REMOTE", "HYBRID"].includes(workOption)) {
+    where.workOption = workOption
+  }
   if (season) {
     where.season = season
   }
@@ -63,6 +67,12 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
     orderBy = { publishedAt: "desc" }
   } else if (sort === "helpful") {
     orderBy = { helpfulScore: "desc" }
+  } else if (sort === "startDate") {
+    orderBy = [{ year: "desc" }, { publishedAt: "desc" }]
+  } else if (sort === "highestPaid") {
+    orderBy = { payHourly: "desc" }
+  } else if (sort === "company") {
+    orderBy = { company: { name: "asc" } }
   }
 
   const [reviews, total] = await Promise.all([
@@ -113,46 +123,59 @@ async function ReviewsList({ searchParams }: { searchParams: any }) {
       {data.reviews?.length === 0 ? (
         <p className="text-muted-foreground">No reviews found.</p>
       ) : (
-        <div className="space-y-4">
-          {data.reviews?.map((review: any) => (
-            <Link key={review.id} href={`/reviews/${review.id}`}>
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>
-                        {review.roleTitle || "Review"} at {review.company.name}
-                      </CardTitle>
-                      <CardDescription>
-                        {review.user.name || review.user.email}
-                        {review.user.school && ` • ${review.user.school}`}
-                        {review.season && review.year && ` • ${review.season} ${review.year}`}
-                      </CardDescription>
-                    </div>
-                    {review.difficulty && (
-                      <div className="text-sm">
-                        Difficulty: {review.difficulty}/5
+        <>
+          <p className="text-sm text-muted-foreground mb-4">
+            {data.pagination.total} review{data.pagination.total !== 1 ? "s" : ""}
+          </p>
+          <div className="space-y-4">
+            {data.reviews?.map((review: any) => (
+              <Link key={review.id} href={`/reviews/${review.id}`}>
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle>
+                          {review.roleTitle || "Review"} at {review.company.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {review.user.name || review.user.email}
+                          {review.user.school && ` • ${review.user.school}`}
+                          {review.season && review.year && ` • ${review.season} ${review.year}`}
+                        </CardDescription>
                       </div>
+                      {review.difficulty && (
+                        <div className="text-sm">
+                          Difficulty: {review.difficulty}/5
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
+                      {review.workOption && (
+                        <span>{review.workOption === "ONSITE" ? "Onsite" : review.workOption === "REMOTE" ? "Remote" : "Hybrid"}</span>
+                      )}
+                      {review.location && <span>• {review.location}</span>}
+                      {review.payHourly != null && (
+                        <span>• {Number(review.payHourly).toFixed(0)} USD/hr</span>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {review.overall && (
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {review.overall}
+                      </p>
                     )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {review.overall && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {review.overall}
-                    </p>
-                  )}
-                  <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
-                    {review.helpfulScore > 0 && (
-                      <span>{review.helpfulScore} helpful</span>
-                    )}
-                    {review.location && <span>{review.location}</span>}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                    <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
+                      {review.helpfulScore > 0 && (
+                        <span>{review.helpfulScore} helpful</span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
       {data.pagination && data.pagination.totalPages > 1 && (
         <div className="flex gap-2 mt-8 justify-center">
@@ -204,7 +227,7 @@ export default function ReviewsPage({
           />
           <Input
             name="role"
-            placeholder="Role title..."
+            placeholder="Role..."
             defaultValue={searchParams.role || ""}
           />
           <Input
@@ -214,6 +237,16 @@ export default function ReviewsPage({
           />
         </div>
         <div className="grid gap-4 md:grid-cols-3">
+          <select
+            name="workOption"
+            defaultValue={searchParams.workOption || ""}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">All work options</option>
+            <option value="ONSITE">Onsite</option>
+            <option value="REMOTE">Remote</option>
+            <option value="HYBRID">Hybrid</option>
+          </select>
           <Input
             name="season"
             placeholder="Season (Summer, Fall, etc.)..."
@@ -225,6 +258,8 @@ export default function ReviewsPage({
             placeholder="Year..."
             defaultValue={searchParams.year || ""}
           />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
           <select
             name="difficulty"
             defaultValue={searchParams.difficulty || ""}
@@ -237,8 +272,6 @@ export default function ReviewsPage({
             <option value="4">Difficulty: 4</option>
             <option value="5">Difficulty: 5</option>
           </select>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
           <select
             name="outcome"
             defaultValue={searchParams.outcome || ""}
@@ -255,7 +288,10 @@ export default function ReviewsPage({
             defaultValue={searchParams.sort || "newest"}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="newest">Newest</option>
+            <option value="newest">Most Recently Added</option>
+            <option value="startDate">Most Recent Start Date</option>
+            <option value="highestPaid">Highest Paid</option>
+            <option value="company">Company (Alphabetical)</option>
             <option value="helpful">Most Helpful</option>
           </select>
         </div>

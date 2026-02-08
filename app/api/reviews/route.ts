@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const companySlug = searchParams.get("companySlug") || ""
     const role = searchParams.get("role") || ""
+    const workOption = searchParams.get("workOption") || ""
     const season = searchParams.get("season") || ""
     const year = searchParams.get("year") || ""
     const location = searchParams.get("location") || ""
@@ -54,6 +55,10 @@ export async function GET(request: NextRequest) {
       where.roleTitle = { contains: role, mode: "insensitive" }
     }
 
+    if (workOption && ["ONSITE", "REMOTE", "HYBRID"].includes(workOption)) {
+      where.workOption = workOption
+    }
+
     if (season) {
       where.season = season
     }
@@ -83,6 +88,12 @@ export async function GET(request: NextRequest) {
       orderBy = { publishedAt: "desc" }
     } else if (sort === "helpful") {
       orderBy = { helpfulScore: "desc" }
+    } else if (sort === "startDate") {
+      orderBy = [{ year: "desc" }, { season: "desc" }, { publishedAt: "desc" }]
+    } else if (sort === "highestPaid") {
+      orderBy = { payHourly: "desc" }
+    } else if (sort === "company") {
+      orderBy = { company: { name: "asc" } }
     } else {
       orderBy = { publishedAt: "desc" }
     }
@@ -158,6 +169,7 @@ export async function POST(request: NextRequest) {
       companyId,
       level,
       roleTitle,
+      workOption,
       location,
       season,
       year,
@@ -204,6 +216,7 @@ export async function POST(request: NextRequest) {
         status: "PENDING",
         level: level || null,
         roleTitle: sanitizeText(roleTitle) || null,
+        workOption: workOption && ["ONSITE", "REMOTE", "HYBRID"].includes(workOption) ? workOption : null,
         location: sanitizeText(location) || null,
         season: season || null,
         year: year ? parseInt(year, 10) : null,
