@@ -22,6 +22,9 @@ export default function Navbar() {
           <Link href="/reviews" className="hover:text-primary">
             Reviews
           </Link>
+          <Link href="/about-us" className="hover:text-primary">
+            About Us
+          </Link>
           {session ? (
             <>
               {(session.user as any)?.role === "ADMIN" && (

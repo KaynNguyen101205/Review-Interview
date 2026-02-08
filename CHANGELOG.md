@@ -121,26 +121,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/test-sentry` - Sentry integration testing page with buttons to trigger errors, messages, and breadcrumbs
 
 #### Rate Limiting
-- **Upstash Redis** integration (`lib/redis.ts`):
-  - Lazy initialization to handle missing environment variables
-  - `getRedisClient()` function with fallback handling
-  - `isRedisConfigured()` helper function
-- **Rate limiters** (`lib/ratelimit.ts`):
-  - `apiRateLimiter`: 10 requests per 10 seconds (sliding window)
-  - `reviewSubmissionRateLimiter`: 3 reviews per minute
-  - `reportSubmissionRateLimiter`: 5 reports per hour
-  - `companyRequestRateLimiter`: 2 requests per hour
-- **Rate limiting middleware** (`lib/rate-limit-middleware.ts`):
-  - `rateLimitMiddleware()` function for API routes
-  - Uses user ID (if authenticated) or IP address as identifier
-  - Returns 429 status with rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset)
+- **Simple in-memory rate limiting** (`lib/validation.ts`):
+  - `checkRateLimit(identifier, maxRequests, windowMs)` helper
+  - Used by `/api/reviews` (review submissions) and `/api/company-requests`
+  - Per-identifier counters stored in process memory, reset on window expiry or process restart
+- **Planned upgrade (not yet implemented)**:
+  - Move to Upstash Redis–backed rate limiting for multi-region / multi-instance deployments
 
 #### Caching
-- **Redis caching utilities** (`lib/cache.ts`):
-  - `Cache.get<T>(key)` - Get cached value with type safety
-  - `Cache.set<T>(key, value, ttlSeconds)` - Set cache with TTL (default 1 hour)
-  - `Cache.del(key)` - Delete cache entry
-  - JSON serialization/deserialization
+- **Next.js ISR / caching**:
+  - Uses `revalidate` on selected routes (e.g. reviews listing) to periodically refresh cached responses
+  - Dynamic API routes are marked appropriately to avoid incorrect static generation
+- **Redis caching utilities (planned, not yet implemented)**:
+  - Future `Cache.get<T>(key) / Cache.set<T>(key, value, ttlSeconds) / Cache.del(key)` helpers
+  - Intended to sit on top of a shared Redis instance (e.g. Upstash) for hot paths
 
 #### Error Tracking & Monitoring
 - **Sentry integration**:
@@ -203,8 +197,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Optional OAuth and Sentry variables
 
 #### Scripts
-- `scripts/check-users.ts` - Utility to list all users in database
-- `scripts/test-redis.ts` - Test Redis connection and functionality
 - `scripts/test-sentry-api.ts` - Test Sentry API integration
 
 ### Changed

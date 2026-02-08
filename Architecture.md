@@ -99,19 +99,15 @@ The Review Platform is a full-stack web application built with Next.js 14, TypeS
 │   └── providers.tsx         # Context providers
 │
 ├── lib/                        # Utility libraries
-│   ├── prisma.ts              # Prisma client singleton
-│   ├── auth.ts                # NextAuth configuration
-│   ├── session.ts             # Session helpers
-│   ├── redis.ts               # Redis client
-│   ├── ratelimit.ts           # Rate limiters
-│   ├── rate-limit-middleware.ts # Rate limiting middleware
-│   ├── cache.ts               # Caching utilities
-│   ├── company-stats.ts       # Company statistics helpers
-│   ├── audit.ts                # Audit logging
+│   ├── prisma.ts               # Prisma client singleton
+│   ├── auth.ts                 # NextAuth configuration
+│   ├── session.ts              # Session helpers
+│   ├── company-stats.ts        # Company statistics helpers
+│   ├── audit.ts                # Audit logging helpers
 │   ├── notifications.ts        # Notification helpers
-│   ├── middleware-helpers.ts   # Middleware utilities
-│   ├── validation.ts           # Zod schemas
-│   └── utils.ts               # General utilities
+│   ├── middleware-helpers.ts   # Auth / RBAC helpers for API routes
+│   ├── validation.ts           # Input sanitization and simple in-memory rate limiting
+│   └── utils.ts                # General utilities
 │
 ├── prisma/                     # Database
 │   ├── schema.prisma          # Prisma schema
@@ -265,26 +261,28 @@ All API routes follow REST conventions:
 
 ## Rate Limiting
 
-Rate limiting is implemented using Upstash Redis with sliding window algorithm:
+For the current MVP, rate limiting is implemented using a **simple in-memory helper** in `lib/validation.ts`:
 
-- **General API**: 10 requests per 10 seconds
-- **Review Submission**: 3 reviews per minute
-- **Report Submission**: 5 reports per hour
-- **Company Request**: 2 requests per hour
+- `checkRateLimit(identifier, maxRequests, windowMs)` keeps a small in-memory counter per identifier.
+- Used for **review submissions** and **company requests** (per-user keys like `review:{userId}` and `company-request:{userId}`).
+- Limits are enforced per Node.js process and reset on process restart.
 
-Rate limiters use user ID (if authenticated) or IP address as identifier.
+This is enough for a single-node deployment on Vercel. For production scale and multi-region deployments, the plan is to move this
+to a shared backend such as **Upstash Redis** (see Future Enhancements).
 
 ## Caching Strategy
 
-### Redis Caching
-- **Purpose**: Reduce database load and improve response times
-- **Cache Keys**: Structured with prefixes (e.g., `company:${id}`, `reviews:${companyId}`)
-- **TTL**: Default 1 hour, configurable per cache entry
-- **Cache Invalidation**: Manual invalidation on updates
+### Next.js Caching (Current)
+- **Static Generation / ISR**: Selected pages (for example, reviews listing) use `revalidate` to regenerate every N seconds.
+- **Dynamic Routes**: API routes that depend on `searchParams` or headers are marked as dynamic to avoid incorrect static generation.
 
-### Next.js Caching
-- **Static Generation**: Homepage revalidates every hour
-- **Dynamic Routes**: Force dynamic rendering for API routes using searchParams/headers
+### Redis Caching (Planned)
+- **Purpose**: Further reduce database load and improve response times for heavy endpoints.
+- **Cache Keys**: Planned structure with prefixes (e.g., `company:${id}`, `reviews:${companyId}`).
+- **TTL**: Default 1 hour, configurable per cache entry.
+- **Cache Invalidation**: Manual invalidation on updates.
+
+Redis-based caching is **not yet implemented** in code; it is a future scalability enhancement.
 
 ## Error Handling
 
